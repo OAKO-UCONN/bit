@@ -18,6 +18,8 @@ package main
 import (
 	"fmt"
 	bitcmd "github.com/chriswalz/bit/cmd"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"os"
 )
 
@@ -33,6 +35,12 @@ func find(slice []string, val string) bool {
 func main() {
 	// defer needed to handle funkyness with CTRL + C & go-prompt
 	defer bitcmd.HandleExit()
+	debug := false
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	if debug {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+	log.Logger = log.With().Caller().Logger().Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	if !bitcmd.IsGitRepo() {
 		if len(os.Args) == 2 && os.Args[1] == "--version" {
 			fmt.Println("bit version v0.6.6")
@@ -42,6 +50,7 @@ func main() {
 		fmt.Println("fatal: not a git repository (or any of the parent directories): .git")
 		return
 	}
+
 	argsWithoutProg := os.Args[1:]
 	bitcliCmds := []string{"save", "sync", "version", "help", "info", "release"}
 	if len(argsWithoutProg) == 0 || find(bitcliCmds, argsWithoutProg[0]) {

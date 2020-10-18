@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -31,7 +31,7 @@ func init() {
 
 func save(msg string) {
 	if NothingToCommit() {
-		fmt.Println("nothing to save or commit")
+		log.Info().Msg("nothing to save or commit")
 		return
 	}
 

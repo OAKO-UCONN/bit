@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"os/exec"
 	"strings"
@@ -10,7 +11,7 @@ import (
 func CloudBranchExists() bool {
 	msg, err := exec.Command("git", "pull").CombinedOutput()
 	if err != nil {
-		fmt.Println(err)
+		log.Debug().Err(err)
 	}
 	//log.Println("msg:", string(msg))
 	//log.Println("err:", err)
@@ -20,7 +21,7 @@ func CloudBranchExists() bool {
 func CurrentBranch() string {
 	msg, err := exec.Command("git", "branch", "--show-current").CombinedOutput()
 	if err != nil {
-		fmt.Println(err)
+		log.Debug().Err(err)
 	}
 	return strings.TrimSpace(string(msg))
 }
@@ -28,7 +29,7 @@ func CurrentBranch() string {
 func IsAheadOfCurrent() bool {
 	msg, err := exec.Command("git", "status", "-sb").CombinedOutput()
 	if err != nil {
-		//fmt.Println(err)
+		log.Debug().Msg(err.Error())
 	}
 	return strings.Contains(string(msg), "ahead")
 }
@@ -44,7 +45,7 @@ func IsGitRepo() bool {
 func IsBehindCurrent() bool {
 	msg, err := exec.Command("git", "status", "-sb").CombinedOutput()
 	if err != nil {
-		//fmt.Println(err)
+		log.Debug().Err(err)
 	}
 	return strings.Contains(string(msg), "behind")
 }
@@ -52,7 +53,7 @@ func IsBehindCurrent() bool {
 func NothingToCommit() bool {
 	msg, err := exec.Command("git", "status").CombinedOutput()
 	if err != nil {
-		//fmt.Println(err)
+		log.Debug().Err(err)
 	}
 	return strings.Contains(string(msg), "nothing to commit")
 }
@@ -60,7 +61,7 @@ func NothingToCommit() bool {
 func IsDiverged() bool {
 	msg, err := exec.Command("git", "status").CombinedOutput()
 	if err != nil {
-		//fmt.Println(err)
+		log.Debug().Err(err)
 	}
 	return strings.Contains(string(msg), "have diverged")
 }
@@ -68,7 +69,7 @@ func IsDiverged() bool {
 func StashableChanges() bool {
 	msg, err := exec.Command("git", "status").CombinedOutput()
 	if err != nil {
-		//fmt.Println(err)
+		log.Debug().Err(err)
 	}
 	return strings.Contains(string(msg), "Changes to be committed:") || strings.Contains(string(msg), "Changes not staged for commit:")
 }
@@ -76,7 +77,7 @@ func StashableChanges() bool {
 func MostRecentCommonAncestorCommit(branchA, branchB string) string {
 	msg, err := exec.Command("git", "merge-base", branchA, branchB).CombinedOutput()
 	if err != nil {
-		//fmt.Println(err)
+		log.Debug().Err(err)
 	}
 	return string(msg)
 }
@@ -84,7 +85,7 @@ func MostRecentCommonAncestorCommit(branchA, branchB string) string {
 func StashList() []string {
 	msg, err := exec.Command("git", "stash", "list").CombinedOutput()
 	if err != nil {
-		//fmt.Println(err)
+		log.Debug().Err(err)
 	}
 	return strings.Split(string(msg), "\n")
 }
@@ -97,7 +98,7 @@ func refreshBranch() error {
 	if strings.TrimSpace(string(msg)) == "Already up to date." {
 		return nil
 	}
-	fmt.Println("Branch was fast-forwarded")
+	log.Debug().Msg("Branch was fast-forwarded")
 	return nil
 }
 
@@ -106,7 +107,7 @@ func refreshOnBranch(branchName string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Branch was fast-forwarded")
+	log.Debug().Msg("Branch was fast-forwarded")
 	return nil
 }
 
@@ -118,7 +119,7 @@ func branchListRaw() (string, error) {
 func FileChangesList() []FileChange {
 	msg, err := exec.Command("git", "status", "--porcelain=v2").CombinedOutput()
 	if err != nil {
-		//fmt.Println(err)
+		log.Debug().Err(err)
 	}
 	var changes []FileChange
 	// if user has an older version of git porcelain=v2 is not supported. don't show CL suggestions for now 2.7
@@ -150,7 +151,7 @@ func FileChangesList() []FileChange {
 func AllGitAliases() (cc []*cobra.Command) {
 	msg, err := exec.Command("git", "config", "--get-regexp", "^alias").CombinedOutput()
 	if err != nil {
-		//fmt.Println(err)
+		log.Debug().Err(err)
 		return cc
 	}
 	aliases := strings.Split(strings.TrimSpace(string(msg)), "\n")
@@ -176,15 +177,15 @@ func AllGitAliases() (cc []*cobra.Command) {
 func PrintGitVersion() {
 	msg, err := exec.Command("git", "--version").CombinedOutput()
 	if err != nil {
-		//fmt.Println(err)
+		log.Debug().Err(err)
 	}
-	fmt.Println(string(msg))
+	log.Debug().Msg(string(msg))
 }
 
 func checkoutBranch(branch string) bool {
 	msg, err := exec.Command("git", "checkout", branch).CombinedOutput()
 	if err != nil {
-		//fmt.Println(err)
+		log.Debug().Err(err)
 	}
 	return !strings.Contains(string(msg), "did not match any file")
 }

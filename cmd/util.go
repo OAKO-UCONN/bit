@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/c-bata/go-prompt"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
@@ -60,7 +61,7 @@ func AskMultiLine(q string) string {
 func BranchList() []Branch {
 	rawBranchData, err := branchListRaw()
 	if err != nil {
-		//log.Println(err) // fixme use debug log
+		log.Debug().Err(err)
 	}
 	return toStructuredBranchList(rawBranchData)
 }
@@ -94,7 +95,7 @@ func toStructuredBranchList(rawBranchData string) []Branch {
 func GenBumpedSemVersion() string {
 	msg, err := exec.Command("/bin/sh", "-c", `git describe --tags --abbrev=0 | awk -F. '{$NF+=1; OFS="."; print $0}'`).CombinedOutput()
 	if err != nil {
-		fmt.Println(err)
+		log.Debug().Err(err)
 	}
 	out := string(msg)
 	return strings.TrimSpace(out)
@@ -104,9 +105,9 @@ func AddCommandToShellHistory(cmd string, args []string) {
 	// not possible??
 	msg, err := exec.Command("/bin/bash", "-c", "history").CombinedOutput()
 	if err != nil {
-		fmt.Println(err)
+		log.Debug().Err(err)
 	}
-	fmt.Println(msg)
+	log.Debug().Msg(string(msg))
 }
 
 func BranchListSuggestions() []prompt.Suggest {
@@ -265,19 +266,6 @@ func concatCopyPreAllocate(slices [][]*cobra.Command) []*cobra.Command {
 func FlagSuggestionsForCommand(gitSubCmd string, flagtype string) []prompt.Suggest {
 	str := ""
 
-	// git help pull | col -b > man.txt
-	//if gitSubCmd != "commit" && gitSubCmd != "push" && gitSubCmd != "status" {
-	//	msg, err := exec.Command("/bin/sh", "-c", "git help " + gitSubCmd + " | col -bx").CombinedOutput()
-	//	if err != nil {
-	//		//fmt.Println(err)
-	//	}
-	//	out := string(msg)
-	//	//out = stripCtlAndExtFromUTF8(out)
-	//	split := strings.Split(out, "OPTIONS")
-	//	fmt.Println(out, split)
-	//	out=split[1]
-	//	//return []prompt.Suggest{}
-	//}
 	flagMap := map[string]string{
 		"add":      addFlagsStr,
 		"diff":     diffFlagsStr,
@@ -325,8 +313,6 @@ func FlagSuggestionsForCommand(gitSubCmd string, flagtype string) []prompt.Sugge
 				})
 			}
 		}
-
-		//log.Println(list[i])
 	}
 	return suggestions
 }
@@ -384,14 +370,14 @@ func RunScriptWithString(path string, script string, args ...string) {
 	var err error
 	err = RunInTerminalWithColor("bin/sh", args)
 	if err != nil {
-		fmt.Println(err)
+		log.Debug().Err(err)
 	}
 }
 
 func parseManPage(subCmd string) string {
 	msg, err := exec.Command("/bin/bash", "-c", "git help "+subCmd+" | col -b").CombinedOutput()
 	if err != nil {
-		fmt.Println(err)
+		log.Debug().Err(err)
 	}
 	splitA := strings.Split(string(msg), "\n\nOPTIONS")
 	splitB := regexp.MustCompile(`\.\n\n[A-Z]+`).Split(splitA[1], 2)
